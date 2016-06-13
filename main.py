@@ -6,4 +6,4 @@ def classify():
     pass
 
 if __name__ == "__main__":
-    print("First commit !")
+    print("Second commit !")
