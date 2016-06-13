@@ -2,9 +2,6 @@
 
 """ Detection of insults in comments """
 
-def preprocessing():
-    pass
-
 def classify():
     pass
 
