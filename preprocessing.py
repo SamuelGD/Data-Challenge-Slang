@@ -4,8 +4,9 @@ import pandas as pd
 
 """ Data preprocessing """
 
-def bad_words(words, wordlist_fname):
-    """ Returns the number of bad_words and ratio of bad_words """
+
+def bad_words_text(words, wordlist_fname):
+    """ Returns the number of bad_words and ratio of bad_words in a single example """
 
     badwords = pd.read_csv("badwords.txt", sep = '\n').as_matrix()
     badwords = np.ndarray.flatten(badwords)
@@ -17,30 +18,40 @@ def bad_words(words, wordlist_fname):
     
     return count, ratio
     
+def bad_words(document, wordlist_fname):
+    """ Creates 2 features: count and ratio of bad words """
+    
+    v_bad_words = np.vectorize(bad_words_text)
+    
+    count, ratio = v_bad_words(document, wordlist_fname)
+    
+    count = count.reshape((-1, 1))
+    ratio = ratio.reshape((-1, 1))
+    
+    X = np.hstack([count, ratio])
+    
+    return X
+    
 def capital_words(words):
     """ Returns the number of uppercase words """
     
     pass
     
-""" Delete noise such as \\n and replace some words like u --> you """
+
 def clean(f):
+    """ Deletes noise such as \\n and replace some words like u --> you """
+    
     f = [x.lower() for x in f]
     f = [x.replace("\\n"," ") for x in f]        
     f = [x.replace("\\t"," ") for x in f]        
     f = [x.replace("\\xa0"," ") for x in f]
     f = [x.replace("\\xc2"," ") for x in f]
 
-    #f = [x.replace(","," ").replace("."," ").replace(" ", "  ") for x in f]
-    #f = [re.subn(" ([a-z]) ","\\1", x)[0] for x in f]  
-    #f = [x.replace("  "," ") for x in f]
-
     f = [x.replace(" u "," you ") for x in f]
     f = [x.replace(" em "," them ") for x in f]
     f = [x.replace(" da "," the ") for x in f]
     f = [x.replace(" yo "," you ") for x in f]
     f = [x.replace(" ur "," you ") for x in f]
-    #f = [x.replace(" ur "," your ") for x in f]
-    #f = [x.replace(" ur "," you're ") for x in f]
     
     f = [x.replace("won't", "will not") for x in f]
     f = [x.replace("can't", "cannot") for x in f]
@@ -58,23 +69,22 @@ def clean(f):
     
     return f
 
-""" Create a list of each words of the sentence"""
 def separate(X):
+    """ Create a list of each words of the sentence"""
+    
     X_separate = []
     for i in range(0,len(X)):
         X_separate.append(X[i].split())
         
     return X_separate
+    
 
 def preprocessing(X):
     """ Create features """
 
-        
-    
     X = clean(X)
-    X_processed = separate(X)
-    print(X_processed[0])
+    X = separate(X)
     
-    
+    X_processed = bad_words(X, "badwords.txt")
     
     return X_processed
