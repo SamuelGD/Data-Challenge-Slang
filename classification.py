@@ -7,8 +7,7 @@ class Classifier:
         pass
     
     def predict(self, X):
-        y_pred = (X < 60).astype(np.int)
-        return y_pred
+        return np.empty((10, 1))
     
     def score(self, X, y):
         y_pred = self.predict(X)
