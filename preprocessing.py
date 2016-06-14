@@ -4,26 +4,27 @@ import pandas as pd
 
 """ Data preprocessing """
 
-
-def bad_words_text(words, wordlist_fname):
-    """ Returns the number of bad_words and ratio of bad_words in a single example """
-
-    badwords = pd.read_csv("badwords.txt", sep = '\n').as_matrix()
-    badwords = np.ndarray.flatten(badwords)
     
-    mask = np.in1d(words, badwords)
-    
-    count = len(mask == True)
-    ratio = float(count) / len(words)
-    
-    return count, ratio
-    
-def bad_words(document, wordlist_fname):
+def bad_words(documents, wordlist_fname):
     """ Creates 2 features: count and ratio of bad words """
+    
+    
+    def bad_words_text(document, wordlist_fname):
+        """ Returns the number of bad_words and ratio of bad_words in a single example """
+    
+        badwords = pd.read_csv("badwords.txt", sep = '\n').as_matrix()
+        badwords = np.ndarray.flatten(badwords)
+        
+        mask = np.in1d(document, badwords)
+        
+        count = len(mask[mask == True])
+        ratio = float(count) / len(document)
+        
+        return count, ratio
     
     v_bad_words = np.vectorize(bad_words_text)
     
-    count, ratio = v_bad_words(document, wordlist_fname)
+    count, ratio = v_bad_words(documents, wordlist_fname)
     
     count = count.reshape((-1, 1))
     ratio = ratio.reshape((-1, 1))
@@ -32,16 +33,30 @@ def bad_words(document, wordlist_fname):
     
     return X
     
-def capital_words(words):
-    """ Returns the number of uppercase words """
+def uppercase_words(documents):
+    """ Creates feature: ratio of uppercase words """
     
-    pass
+    def uppercase_words_text(document):
+        """ Returns ratio of uppercase words in a single document """
+        
+        v_is_upper = np.vectorize(str.isupper)
+        
+        mask = v_is_upper(document)
+        
+        ratio = np.mean(mask == True)
+        
+        return ratio
+            
+    v_uppercase_words_text = np.vectorize(uppercase_words_text)
+    
+    X = v_uppercase_words_text(documents).reshape((-1, 1))
+    
+    return X
     
 
 def clean(f):
     """ Deletes noise such as \\n and replace some words like u --> you """
     
-    f = [x.lower() for x in f]
     f = [x.replace("\\n"," ") for x in f]        
     f = [x.replace("\\t"," ") for x in f]        
     f = [x.replace("\\xa0"," ") for x in f]
@@ -85,6 +100,9 @@ def preprocessing(X):
     X = clean(X)
     X = separate(X)
     
-    X_processed = bad_words(X, "badwords.txt")
+    X_bad_words = bad_words(X, "badwords.txt")
+    X_uppercase = uppercase_words(X)
+    
+    X_processed = np.hstack([X_bad_words, X_uppercase])
     
     return X_processed

@@ -48,5 +48,3 @@ if __name__ == "__main__":
     # Save predictions to file
     
     np.savetxt('y_pred.txt', y_pred, fmt='%s')
-    
-    print(y_pred)
