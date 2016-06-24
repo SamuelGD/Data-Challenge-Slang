@@ -52,6 +52,27 @@ def uppercase_words(documents):
     X = v_uppercase_words_text(documents).reshape((-1, 1))
     
     return X
+
+def exclamation_marks(documents):
+    """ Creates one feature: ratio of exclamation marks """
+    
+    def exclamation_marks_text(document):
+        """ Returns ratio of exclamation marks in a single document (compared to the number of words) """
+        
+        count = 0
+        
+        for word in document:
+            count += word.count('!')
+        
+        ratio = float(count) / len(document)
+        
+        return ratio
+    
+    v_exclamation_marks_text = np.vectorize(exclamation_marks_text)
+    
+    X = v_exclamation_marks_text(documents).reshape((-1, 1))
+    
+    return X
     
 
 def clean(f):
@@ -105,7 +126,8 @@ def preprocessing(X):
     
     X_bad_words = bad_words(X, "badwords.txt")
     X_uppercase = uppercase_words(X)
+    X_exclamation_marks = exclamation_marks(X)
     
-    X_processed = np.hstack([X_bad_words, X_uppercase])
+    X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks])
     
     return X_processed
