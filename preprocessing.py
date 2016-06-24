@@ -61,6 +61,9 @@ def clean(f):
     f = [x.replace("\\t"," ") for x in f]        
     f = [x.replace("\\xa0"," ") for x in f]
     f = [x.replace("\\xc2"," ") for x in f]
+    f = [x.replace("\\xbf"," ") for x in f]
+    f = [x.replace("\\r"," ") for x in f]
+    f = [x.replace("\\"," ") for x in f]
 
     f = [x.replace(" u "," you ") for x in f]
     f = [x.replace(" em "," them ") for x in f]
