@@ -105,6 +105,8 @@ def clean(f):
     f = [x.replace("'d", " would") for x in f]
     
     f = [x.replace(".", " ") for x in f]
+    f = [x.replace("[", " ") for x in f]
+    f = [x.replace("]", " ") for x in f]
     
     return f
 
