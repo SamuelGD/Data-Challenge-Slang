@@ -175,6 +175,17 @@ def separate(X):
         
     return X_separate
     
+def all_lowercase(documents):
+    """ Make sure all letters are lowercase """
+    
+    lower_documents = []
+    
+    for doc in documents:
+
+        lower_documents.append([x.lower() for x in doc])
+        
+    return lower_documents
+    
 
 def preprocessing(X):
     """ Create features """
@@ -188,6 +199,7 @@ def preprocessing(X):
     X_smileys = smileys(X)
     
     X = clean_twice(X)
+    X = all_lowercase(X)
     
     X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys])
     
