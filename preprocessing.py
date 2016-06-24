@@ -1,6 +1,7 @@
 # -*-coding:Latin-1 -*
 import numpy as np
 import pandas as pd
+import re
 
 """ Data preprocessing """
 
@@ -103,6 +104,18 @@ def clean(f):
     f = [x.replace("'s", " is") for x in f]
     f = [x.replace("'re", " are") for x in f]
     f = [x.replace("'d", " would") for x in f]
+    
+    def remove_urls(document):
+        """ Removes all urls in document. """
+        
+        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', document)
+        
+        for url in urls:
+            document = document.replace(url, " ")
+            
+        return document
+    
+    f = [remove_urls(x) for x in f]
     
     f = [x.replace(".", " ") for x in f]
     f = [x.replace("[", " ") for x in f]
