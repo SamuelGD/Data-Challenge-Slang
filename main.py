@@ -14,14 +14,14 @@ def load_data(train_fname, test_fname):
     with open(train_fname) as f:
         for line in f:
             y.append(int(line[0]))
-            X.append(line[5:-6])
+            X.append(line[5:-4])
             
     y = np.array(y)
     
     X_test = []
     with open(test_fname) as f:
         for line in f:
-            X_test.append(line[3:-6])
+            X_test.append(line[3:-4])
     
     return X, y, X_test
 
