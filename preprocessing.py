@@ -75,6 +75,28 @@ def exclamation_marks(documents):
     
     return X
     
+def smileys(documents):
+    """ Creates one feature: ratio of nice smileys """
+    
+    list_smileys = [':)', ':-)', ';)', ';-)', '=)', '=D', ':p', ':P', '<3']
+    
+    def smileys_text(document):
+        """ Returns number of smileys in a single document """
+        
+        count = 0
+        
+        for word in document:
+            for smiley in list_smileys:
+                count += word.count(smiley)
+        
+        return count
+        
+    v_smileys_text = np.vectorize(smileys_text)
+    
+    X = v_smileys_text(documents).reshape((-1, 1))
+    
+    return X
+    
 
 def clean(f):
     """ Deletes noise such as \\n and replace some words like u --> you """
@@ -142,7 +164,8 @@ def preprocessing(X):
     X_bad_words = bad_words(X, "badwords.txt")
     X_uppercase = uppercase_words(X)
     X_exclamation_marks = exclamation_marks(X)
+    X_smileys = smileys(X)
     
-    X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks])
+    X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys])
     
     return X_processed
