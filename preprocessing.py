@@ -145,6 +145,24 @@ def clean(f):
     
     return f
 
+def clean_twice(documents):
+    """
+    Deletes remaining noise such as '!' and ')'
+    This function should be called when we are sure these symbols won't be usefull anymore
+    """
+    
+    clean_documents = []
+    
+    for doc in documents:
+        doc = [x.replace("!","") for x in doc]
+        doc = [x.replace("(","") for x in doc]
+        doc = [x.replace(")","") for x in doc]
+        doc = [x.replace(":","") for x in doc]
+        
+        clean_documents.append(doc)
+    
+    return clean_documents
+
 def separate(X):
     """ Create a list of each words of the sentence"""
     
@@ -165,6 +183,8 @@ def preprocessing(X):
     X_uppercase = uppercase_words(X)
     X_exclamation_marks = exclamation_marks(X)
     X_smileys = smileys(X)
+    
+    X = clean_twice(X)
     
     X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys])
     
