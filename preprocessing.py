@@ -140,6 +140,9 @@ def clean(f):
     f = [remove_urls(x) for x in f]
     
     f = [x.replace(".", " ") for x in f]
+    f = [x.replace("?"," ") for x in f]
+    f = [x.replace("-"," ") for x in f]
+    f = [x.replace("^"," ") for x in f]
     f = [x.replace("[", " ") for x in f]
     f = [x.replace("]", " ") for x in f]
     
