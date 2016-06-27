@@ -192,6 +192,7 @@ def preprocessing(X):
 
     X = clean(X)
     X = separate(X)
+    X = [x for x in X if x]
     
     X_bad_words = bad_words(X, "badwords.txt")
     X_uppercase = uppercase_words(X)
