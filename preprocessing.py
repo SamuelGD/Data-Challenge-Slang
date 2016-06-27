@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import re
 from nltk import WordNetLemmatizer
+import copy
+import itertools
 
 """ Data preprocessing """
 
@@ -36,6 +38,43 @@ def bad_words(documents, wordlist_fname):
     ratio = ratio.reshape((-1, 1))
     
     X = np.hstack([count, ratio])
+    
+    return X
+
+def search_you(documents):
+    """Create feature: distance of a you from a badword"""
+    bad_words = 'badwords.txt'
+    you = "you.txt"
+
+    BadWords = []
+    with open(bad_words) as f:
+        for line in f:
+            BadWords.append(line[0:len(line)-1])
+
+    You = []
+    with open(you) as f:
+        for line in f:
+            You.append(line[0:len(line)-1])
+
+    distance = np.zeros(len(documents))
+
+    for i in range(0, len(documents)):
+        is_badwords = []
+        is_you = []
+        for j in range(0, len(documents[i])):
+            if(documents[i][j] in BadWords):
+                is_badwords.append(j+1)
+            if(documents[i][j] in You):
+                is_you.append(j+1)
+
+        score = 0
+        if(len(is_badwords) and len(is_you)):
+            pairs = list(itertools.product(is_badwords,is_you))
+            for k in range(0, len(pairs)):
+                score = score + 1./(abs(pairs[k][0] - pairs[k][1]))
+        distance[i] = score         
+        
+    X = distance.reshape((-1, 1))
     
     return X
     
@@ -150,6 +189,7 @@ def clean(f):
     f = [x.replace("^"," ") for x in f]
     f = [x.replace("[", " ") for x in f]
     f = [x.replace("]", " ") for x in f]
+    f = [x.replace(",", " ") for x in f]
     
     return f
 
@@ -210,6 +250,7 @@ def preprocessing(X):
     X_uppercase = uppercase_words(X)
     X_exclamation_marks = exclamation_marks(X)
     X_smileys = smileys(X)
+    X_you = search_you(X)
     
     X = clean_twice(X)
     X = all_lowercase(X)
@@ -219,6 +260,6 @@ def preprocessing(X):
     # tf-idf
     # n-gram (n = 4)
     
-    X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys])
+    X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you])
     
     return X_processed
