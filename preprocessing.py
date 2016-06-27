@@ -5,6 +5,8 @@ import re
 from nltk import WordNetLemmatizer
 import copy
 import itertools
+from sklearn.feature_extraction.text import TfidfVectorizer
+import scipy as sp
 
 """ Data preprocessing """
 
@@ -17,7 +19,12 @@ def bad_words(documents, wordlist_fname):
     
     def bad_words_text(document, wordlist_fname):
         """ Returns the number of bad_words and ratio of bad_words in a single example """
-    
+        
+        document_length = len(document)
+        
+        if document_length == 0:
+            return 0, 0
+        
         badwords = pd.read_csv("badwords.txt", sep = '\n').as_matrix()
         badwords = np.ndarray.flatten(badwords)
         badwords = v_lemmatize(badwords) # lemmatize
@@ -26,7 +33,7 @@ def bad_words(documents, wordlist_fname):
         mask = np.in1d(document, badwords)
         
         count = len(mask[mask == True])
-        ratio = float(count) / len(document)
+        ratio = float(count) / document_length
         
         return count, ratio
     
@@ -86,6 +93,9 @@ def uppercase_words(documents):
     def uppercase_words_text(document):
         """ Returns ratio of uppercase words in a single document """
         
+        if len(document) == 0:
+            return 0
+        
         v_is_upper = np.vectorize(str.isupper)
         
         mask = v_is_upper(document)
@@ -106,12 +116,17 @@ def exclamation_marks(documents):
     def exclamation_marks_text(document):
         """ Returns ratio of exclamation marks in a single document (compared to the number of words) """
         
+        document_length = len(document)
+        
+        if document_length == 0:
+            return 0
+            
         count = 0
         
         for word in document:
             count += word.count('!')
         
-        ratio = float(count) / len(document)
+        ratio = float(count) / document_length
         
         return ratio
     
@@ -208,6 +223,7 @@ def clean_twice(documents):
         doc = [x.replace("(","") for x in doc]
         doc = [x.replace(")","") for x in doc]
         doc = [x.replace(":","") for x in doc]
+        doc = [x.replace(";", "") for x in doc]
         
         clean_documents.append(doc)
     
@@ -238,13 +254,38 @@ def all_lowercase(documents):
         
     return lower_documents
     
+def tf_idf(X):
+    """ TF IDF for vector of words X """
+    
+    # TOUT RECODER
+    
+    # try binary = True, try sublinear_tf = True, max_df value
+    vectorizer = TfidfVectorizer(sublinear_tf=False, analyzer = 'word', max_df=0.5, binary=False, stop_words='english')
+    
+    X_string = [' '.join(X[i]) for i in range(len(X))]
+
+    X_tf_idf = vectorizer.fit_transform(X_string)
+    
+    return X_tf_idf
+
+def n_gram(X, n_range = (4, 4), analyzer = 'char'):
+    """ n-gram of chars """
+    
+    # TOUT RECODER
+    
+    vectorizer = TfidfVectorizer(ngram_range = n_range, sublinear_tf=True, analyzer = analyzer, max_df=0.5, stop_words='english')
+    
+    X_string = [' '.join(X[i]) for i in range(len(X))]
+    
+    X_n_gram = vectorizer.fit_transform(X_string)
+    
+    return X_n_gram
 
 def preprocessing(X):
     """ Create features """
 
     X = clean(X)
     X = separate(X)
-    X = [x for x in X if x]
     
     X_bad_words = bad_words(X, "badwords.txt")
     X_uppercase = uppercase_words(X)
@@ -255,12 +296,15 @@ def preprocessing(X):
     X = clean_twice(X)
     X = all_lowercase(X)
     
+    X_tf_idf = tf_idf(X)
+    X_4_gram = n_gram(X)
     
-    # stemming
+    
     # stop words
     # tf-idf
     # n-gram (n = 4)
+
+    #X_processed = sp.sparse.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you, X_tf_idf, X_4_gram])
+    X_processed = sp.sparse.hstack([X_uppercase, X_exclamation_marks, X_smileys, X_tf_idf, X_4_gram])
     
-    X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you])
-    
-    return X_processed
+    return X_processed, X

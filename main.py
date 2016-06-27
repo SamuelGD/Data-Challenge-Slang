@@ -2,6 +2,9 @@
 import numpy as np
 from preprocessing import preprocessing
 from classification import Classifier
+from sklearn.svm import SVC
+from sklearn.cross_validation import train_test_split
+from sklearn.grid_search import GridSearchCV
 
 """ Detection of insults in comments """
 
@@ -30,23 +33,36 @@ if __name__ == "__main__":
     
     # Load the data
     
-    X, y, X_test = load_data("train.csv", "test.csv")
+    X, y, X_real_test = load_data("train.csv", "test.csv")
+    
     
     # Preprocessing
     
-    X_processed = preprocessing(X)
-    X_test_processed = preprocessing(X_test)
+    X_processed, X_dbg = preprocessing(X)
     
-    exit
+    print(X_dbg[0])
+
+    #X_test_processed = preprocessing(X_real_test)
     
     # Classification
     
-    clf = Classifier()
-    clf.fit(X_processed)
-    y_pred = clf.predict(X_test_processed)
+    print("Beginning prediction")
     
-    print("Score on train: %f" % clf.score(X_processed, y))
+    #clf = Classifier()
+    X_train, X_test, y_train, y_test = train_test_split(X_processed, y, test_size=0.25, random_state=42)
+    svc = SVC(C = 1.0) # best_score: 0.815217 for C = 990000
+    
+    Cs = [990000, 900000, 1100000]
+    clf = GridSearchCV(estimator = svc, param_grid = dict(C = Cs), n_jobs = -1)
+    clf.fit(X_train, y_train)
+    
+    print(clf.best_estimator_)
+    
+    print("Score: %f" % clf.score(X_test, y_test))
+    
+    
+    #y_pred = clf.predict(X_test_processed)
     
     # Save predictions to file
     
-    np.savetxt('y_pred.txt', y_pred, fmt='%s')
+    #np.savetxt('y_pred.txt', y_pred, fmt='%s')
