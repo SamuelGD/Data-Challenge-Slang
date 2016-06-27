@@ -188,6 +188,9 @@ def clean(f):
     f = [x.replace("'re", " are") for x in f]
     f = [x.replace("'d", " would") for x in f]
     
+    f = [x.replace("mudafucka", "motherfucker") for x in f]
+    f = [x.replace("bytch", "bitch") for x in f]
+    
     def remove_urls(document):
         """ Removes all urls in document. """
         
@@ -219,11 +222,11 @@ def clean_twice(documents):
     clean_documents = []
     
     for doc in documents:
-        doc = [x.replace("!","") for x in doc]
-        doc = [x.replace("(","") for x in doc]
-        doc = [x.replace(")","") for x in doc]
-        doc = [x.replace(":","") for x in doc]
-        doc = [x.replace(";", "") for x in doc]
+        doc = [re.sub(r'[!\(\):;]',"", x) for x in doc] # ! ( ) : ;
+        doc = [x for x in doc if x]
+        
+        if len(doc) == 0: # a document can't be empty, at least an empty string
+            doc = ['']
         
         clean_documents.append(doc)
     
@@ -254,57 +257,122 @@ def all_lowercase(documents):
         
     return lower_documents
     
-def tf_idf(X):
+class Tf_idf:
     """ TF IDF for vector of words X """
     
-    # TOUT RECODER
+    def __init__(self):
+        self.vectorizer = TfidfVectorizer(sublinear_tf=False, analyzer = 'word', max_df=0.5, binary=False, stop_words='english')
     
-    # try binary = True, try sublinear_tf = True, max_df value
-    vectorizer = TfidfVectorizer(sublinear_tf=False, analyzer = 'word', max_df=0.5, binary=False, stop_words='english')
+    def fit(self, X):
+        # TOUT RECODER
+        
+        # try binary = True, try sublinear_tf = True, max_df value
+        vectorizer = self.vectorizer
+        
+        X_string = [' '.join(X[i]) for i in range(len(X))]
     
-    X_string = [' '.join(X[i]) for i in range(len(X))]
+        vectorizer.fit(X_string)
+        
+    def transform(self, X):
+        # TOUT RECODER
+        
+        # try binary = True, try sublinear_tf = True, max_df value
+        vectorizer = self.vectorizer
+        
+        X_string = [' '.join(X[i]) for i in range(len(X))]
+    
+        X_tf_idf = vectorizer.transform(X_string)
+        
+        return X_tf_idf
+        
+    def fit_transform(self, X):
+        self.fit(X)
+        return self.transform(X)
 
-    X_tf_idf = vectorizer.fit_transform(X_string)
-    
-    return X_tf_idf
-
-def n_gram(X, n_range = (4, 4), analyzer = 'char'):
+class N_gram:
     """ n-gram of chars """
     
-    # TOUT RECODER
+    def __init__(self, n_range = (4, 4), analyzer = 'char'):
+        self.vectorizer = TfidfVectorizer(ngram_range = n_range, sublinear_tf=True, analyzer = analyzer, max_df=0.5, stop_words='english')
     
-    vectorizer = TfidfVectorizer(ngram_range = n_range, sublinear_tf=True, analyzer = analyzer, max_df=0.5, stop_words='english')
-    
-    X_string = [' '.join(X[i]) for i in range(len(X))]
-    
-    X_n_gram = vectorizer.fit_transform(X_string)
-    
-    return X_n_gram
+    def fit(self, X):
+        # TOUT RECODER
+        
+        vectorizer = self.vectorizer
+        
+        X_string = [' '.join(X[i]) for i in range(len(X))]
+        
+        vectorizer.fit(X_string)
+        
+    def transform(self, X):
+        # TOUT RECODER
+        
+        vectorizer = self.vectorizer
+        
+        X_string = [' '.join(X[i]) for i in range(len(X))]
+        
+        X_n_gram = vectorizer.transform(X_string)
+        
+        return X_n_gram
+        
+    def fit_transform(self, X):
+        
+        self.fit(X)
+        return self.transform(X)
 
-def preprocessing(X):
+def stop_words(X, filename = 'stopwords.txt'):
+    """
+        Remove stop words
+    """
+    wordnet_lemmatizer = WordNetLemmatizer()
+    v_lemmatize = np.vectorize(wordnet_lemmatizer.lemmatize)
+    stopwords = pd.read_csv(filename, sep = '\n').as_matrix()
+    stopwords = np.ndarray.flatten(stopwords)
+    stopwords = v_lemmatize(stopwords) # lemmatize
+    
+    def stop_words_text(document):
+        document = np.array(document)
+        mask = np.in1d(document, stopwords)
+        document = document[np.where(mask == False)]
+        return document.tolist()
+        
+    X_stopped = [stop_words_text(doc) for doc in X]
+    
+    return X_stopped
+        
+def preprocessing(X, X_test):
     """ Create features """
+    
+    tf_idf = Tf_idf()
+    n_gram = N_gram(n_range = (4, 5))
 
-    X = clean(X)
-    X = separate(X)
+    def prepare(X, train = True):
+        X = clean(X)
+        X = separate(X)
+        
+        X_bad_words = bad_words(X, "badwords.txt")
+        X_uppercase = uppercase_words(X)
+        X_exclamation_marks = exclamation_marks(X)
+        X_smileys = smileys(X)
+        X_you = search_you(X)
+        
+        X = clean_twice(X)
+        #X = stop_words(X) # does not improve the model
+        X = all_lowercase(X)
+        
+        if train:
+            X_tf_idf = tf_idf.fit_transform(X)
+            X_n_gram = n_gram.fit_transform(X)
+        else:
+            X_tf_idf = tf_idf.transform(X)
+            X_n_gram = n_gram.transform(X)
     
-    X_bad_words = bad_words(X, "badwords.txt")
-    X_uppercase = uppercase_words(X)
-    X_exclamation_marks = exclamation_marks(X)
-    X_smileys = smileys(X)
-    X_you = search_you(X)
+        #X_processed = sp.sparse.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you, X_tf_idf, X_4_gram])
+        X_processed = sp.sparse.hstack([X_tf_idf, X_n_gram])
+        
+        return X_processed
+        
+    X_processed = prepare(X)
+    X_test_processed = prepare(X_test, train = False)
     
-    X = clean_twice(X)
-    X = all_lowercase(X)
-    
-    X_tf_idf = tf_idf(X)
-    X_4_gram = n_gram(X)
-    
-    
-    # stop words
-    # tf-idf
-    # n-gram (n = 4)
-
-    #X_processed = sp.sparse.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you, X_tf_idf, X_4_gram])
-    X_processed = sp.sparse.hstack([X_uppercase, X_exclamation_marks, X_smileys, X_tf_idf, X_4_gram])
-    
-    return X_processed, X
+    return X_processed, X_test_processed
