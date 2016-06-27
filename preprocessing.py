@@ -45,16 +45,18 @@ def search_you(documents):
     """Create feature: distance of a you from a badword"""
     bad_words = 'badwords.txt'
     you = "you.txt"
+    
+    wordnet_lemmatizer = WordNetLemmatizer()
 
     BadWords = []
     with open(bad_words) as f:
         for line in f:
-            BadWords.append(line[0:len(line)-1])
+            BadWords.append(wordnet_lemmatizer.lemmatize(line[0:len(line)-1]))
 
     You = []
     with open(you) as f:
         for line in f:
-            You.append(line[0:len(line)-1])
+            You.append(wordnet_lemmatizer.lemmatize(line[0:len(line)-1]))
 
     distance = np.zeros(len(documents))
 
@@ -215,8 +217,6 @@ def separate(X):
     """ Create a list of each words of the sentence"""
     
     wordnet_lemmatizer = WordNetLemmatizer()
-
-    #v_lemmatize = np.vectorize(wordnet_lemmatizer.lemmatize)
     
     X_separate = []
     for i in range(0,len(X)):
@@ -254,6 +254,7 @@ def preprocessing(X):
     
     X = clean_twice(X)
     X = all_lowercase(X)
+    
     
     # stemming
     # stop words
