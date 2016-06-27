@@ -5,7 +5,7 @@ class Classifier:
     
     def fit(self, X):
         pass
-    
+     
     def predict(self, X):
         return np.empty((10, 1))
     

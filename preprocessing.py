@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import re
+from nltk import WordNetLemmatizer
 
 """ Data preprocessing """
 
@@ -9,12 +10,16 @@ import re
 def bad_words(documents, wordlist_fname):
     """ Creates 2 features: count and ratio of bad words """
     
+    wordnet_lemmatizer = WordNetLemmatizer()
+    v_lemmatize = np.vectorize(wordnet_lemmatizer.lemmatize)
     
     def bad_words_text(document, wordlist_fname):
         """ Returns the number of bad_words and ratio of bad_words in a single example """
     
         badwords = pd.read_csv("badwords.txt", sep = '\n').as_matrix()
         badwords = np.ndarray.flatten(badwords)
+        badwords = v_lemmatize(badwords) # lemmatize
+        
         
         mask = np.in1d(document, badwords)
         
@@ -169,9 +174,16 @@ def clean_twice(documents):
 def separate(X):
     """ Create a list of each words of the sentence"""
     
+    wordnet_lemmatizer = WordNetLemmatizer()
+
+    #v_lemmatize = np.vectorize(wordnet_lemmatizer.lemmatize)
+    
     X_separate = []
     for i in range(0,len(X)):
-        X_separate.append(X[i].split())
+        if X[i] != []:
+            lemmatized_vector = list(map(wordnet_lemmatizer.lemmatize, X[i].split()))# lemmatization
+
+            X_separate.append(lemmatized_vector)
         
     return X_separate
     
@@ -201,6 +213,11 @@ def preprocessing(X):
     
     X = clean_twice(X)
     X = all_lowercase(X)
+    
+    # stemming
+    # stop words
+    # tf-idf
+    # n-gram (n = 4)
     
     X_processed = np.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys])
     

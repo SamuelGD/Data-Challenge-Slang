@@ -37,6 +37,8 @@ if __name__ == "__main__":
     X_processed = preprocessing(X)
     X_test_processed = preprocessing(X_test)
     
+    exit
+    
     # Classification
     
     clf = Classifier()
