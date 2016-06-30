@@ -49,6 +49,43 @@ def bad_words(documents, wordlist_fname):
     
     return X
 
+def you(documents, wordlist_fname):
+    """ Creates 2 features: count and ratio of bad words """
+    
+    wordnet_lemmatizer = WordNetLemmatizer()
+    v_lemmatize = np.vectorize(wordnet_lemmatizer.lemmatize)
+    
+    def you_text(document, wordlist_fname):
+        """ Returns the number of bad_words and ratio of bad_words in a single example """
+        
+        document_length = len(document)
+        
+        if document_length == 0:
+            return 0, 0
+        
+        you = pd.read_csv("you.txt", sep = '\n').as_matrix()
+        you = np.ndarray.flatten(you)
+        you = v_lemmatize(you) # lemmatize
+        
+        
+        mask = np.in1d(document, you)
+        
+        count = len(mask[mask == True])
+        ratio = float(count) / document_length
+        
+        return count, ratio
+    
+    v_you = np.vectorize(you_text)
+    
+    count, ratio = v_you(documents, wordlist_fname)
+    
+    count = count.reshape((-1, 1))
+    ratio = ratio.reshape((-1, 1))
+    
+    X = np.hstack([count, ratio])
+    
+    return X
+
 def search_you(documents):
     """Create feature: distance of a you from a badword"""
     bad_words = 'badwords.txt'
@@ -325,6 +362,7 @@ def preprocessing(X, X_test):
         X_exclamation_marks = exclamation_marks(X)
         X_smileys = smileys(X)
         X_you = search_you(X)
+        X_you2 = you(X, "you.txt")
         
         X = clean_twice(X)
         #X = stop_words(X) # does not improve the model
@@ -337,8 +375,8 @@ def preprocessing(X, X_test):
             X_tf_idf = tf_idf.transform(X)
             X_n_gram = n_gram.transform(X)
     
-        #X_processed = sp.sparse.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you, X_tf_idf, X_4_gram])
-        X_processed = sp.sparse.hstack([X_tf_idf, X_n_gram])
+        X_processed = sp.sparse.hstack([X_bad_words, X_uppercase, X_exclamation_marks, X_smileys, X_you, X_you2, X_tf_idf, X_n_gram])
+        #X_processed = sp.sparse.hstack([X_tf_idf, X_n_gram])
         
         return X_processed
         
