@@ -2,9 +2,15 @@
 import numpy as np
 from preprocessing import preprocessing
 from classification import Classifier
-from sklearn.svm import SVC
-from sklearn.cross_validation import train_test_split
-from sklearn.grid_search import GridSearchCV
+import pandas as pd
+import re
+from nltk import WordNetLemmatizer
+import copy
+import itertools
+from sklearn.feature_extraction.text import TfidfVectorizer
+import scipy as sp
+from scipy.optimize import minimize
+
 
 """ Detection of insults in comments """
 
@@ -49,18 +55,11 @@ if __name__ == "__main__":
     
     print("Beginning prediction")
     
-    #clf = Classifier()
-    X_train, X_test, y_train, y_test = train_test_split(X_processed, y, test_size=0.25, random_state=42)
-    svc = SVC(C = 50000) # best_score: 0.828 pour C = 50000 (4 gram et tfidf)
-    
-    Cs = [30000, 50000, 70000]
-    clf = GridSearchCV(estimator = svc, param_grid = dict(C = Cs), n_jobs = -1)
-    #clf = svc    
-    #X_train = X_processed
-    #y_train = y
+    clf = Classifier(C=50000)
+
+    X_train = X_processed.tocsr()
+    y_train = y
     clf.fit(X_train, y_train)
-    
-    print(clf.best_estimator_)
     
     print("Score: %f" % clf.score(X_test, y_test))
     
