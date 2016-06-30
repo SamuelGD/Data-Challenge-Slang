@@ -7,6 +7,7 @@ import copy
 import itertools
 from sklearn.feature_extraction.text import TfidfVectorizer
 import scipy as sp
+from n_gram import N_gram
 
 """ Data preprocessing """
 
@@ -286,37 +287,6 @@ class Tf_idf:
         return X_tf_idf
         
     def fit_transform(self, X):
-        self.fit(X)
-        return self.transform(X)
-
-class N_gram:
-    """ n-gram of chars """
-    
-    def __init__(self, n_range = (4, 4), analyzer = 'char'):
-        self.vectorizer = TfidfVectorizer(ngram_range = n_range, sublinear_tf=True, analyzer = analyzer, max_df=0.5, stop_words='english')
-    
-    def fit(self, X):
-        # TOUT RECODER
-        
-        vectorizer = self.vectorizer
-        
-        X_string = [' '.join(X[i]) for i in range(len(X))]
-        
-        vectorizer.fit(X_string)
-        
-    def transform(self, X):
-        # TOUT RECODER
-        
-        vectorizer = self.vectorizer
-        
-        X_string = [' '.join(X[i]) for i in range(len(X))]
-        
-        X_n_gram = vectorizer.transform(X_string)
-        
-        return X_n_gram
-        
-    def fit_transform(self, X):
-        
         self.fit(X)
         return self.transform(X)
 

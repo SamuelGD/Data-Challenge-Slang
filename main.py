@@ -53,7 +53,7 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(X_processed, y, test_size=0.25, random_state=42)
     svc = SVC(C = 50000) # best_score: 0.828 pour C = 50000 (4 gram et tfidf)
     
-    Cs = [50000]
+    Cs = [30000, 50000, 70000]
     clf = GridSearchCV(estimator = svc, param_grid = dict(C = Cs), n_jobs = -1)
     #clf = svc    
     #X_train = X_processed
