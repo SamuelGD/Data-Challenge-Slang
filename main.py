@@ -27,6 +27,10 @@ def load_data(train_fname, test_fname):
             
     y = np.array(y)
     
+    for i in range(0,len(y)):
+        if(y[i]==0):
+            y[i]=-1
+    
     X_test = []
     with open(test_fname) as f:
         for line in f:
